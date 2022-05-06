@@ -6,8 +6,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../../flutter_quill.dart';
 
 class YoutubeVideoApp extends StatefulWidget {
-  const YoutubeVideoApp(
-      {required this.videoUrl, required this.context, required this.readOnly});
+  const YoutubeVideoApp({required this.videoUrl, required this.context, required this.readOnly});
 
   final String videoUrl;
   final BuildContext context;
@@ -41,15 +40,19 @@ class _YoutubeVideoAppState extends State<YoutubeVideoApp> {
       if (widget.readOnly) {
         return RichText(
           text: TextSpan(
-              text: widget.videoUrl,
-              style: defaultStyles.link,
-              recognizer: TapGestureRecognizer()
-                ..onTap = () => launchUrl(Uri.parse(widget.videoUrl))),
+            text: widget.videoUrl,
+            style: defaultStyles.link,
+            recognizer: TapGestureRecognizer()..onTap = () => launch(widget.videoUrl),
+          ),
         );
       }
 
       return RichText(
-          text: TextSpan(text: widget.videoUrl, style: defaultStyles.link));
+        text: TextSpan(
+          text: widget.videoUrl,
+          style: defaultStyles.link,
+        ),
+      );
     }
 
     return Container(

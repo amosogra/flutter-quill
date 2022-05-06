@@ -1,14 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:app/pages/document_writer.dart';
+import 'package:app/pages/document_reader.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Text;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tuple/tuple.dart';
@@ -16,27 +15,32 @@ import 'package:tuple/tuple.dart';
 import '../universal_ui/universal_ui.dart';
 import 'read_only_page.dart';
 
-class HomePage extends StatefulWidget {
+class DocumentWriter extends StatefulWidget {
+  const DocumentWriter({required this.doc, Key? key}) : super(key: key);
+  final Document doc;
+
   @override
-  _HomePageState createState() => _HomePageState();
+  _DocumentWriterState createState() => _DocumentWriterState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _DocumentWriterState extends State<DocumentWriter> {
   QuillController? _controller;
   final FocusNode _focusNode = FocusNode();
+  bool togglePosition = false;
+  bool toggleExpand = false;
+  bool _edit = false;
+  bool toggleEdit = true;
 
   @override
   void initState() {
     super.initState();
-    _loadFromAssets();
+    _loadDocument();
   }
 
-  Future<void> _loadFromAssets() async {
+  Future<void> _loadDocument() async {
     try {
-      final result = await rootBundle.loadString('assets/sample_data.json');
-      final doc = Document.fromJson(jsonDecode(result));
       setState(() {
-        _controller = QuillController(document: doc, selection: const TextSelection.collapsed(offset: 0));
+        _controller = QuillController(document: widget.doc, selection: const TextSelection.collapsed(offset: 0));
       });
     } catch (error) {
       final doc = Document()..insert(0, 'Empty asset');
@@ -57,20 +61,50 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.grey.shade800,
         elevation: 0,
         centerTitle: false,
-        title: const Text(
+        title: Text(
           'Flutter Quill',
+          style: GoogleFonts.fondamento(color: Colors.white),
         ),
         actions: [
+          if (_edit)
+            IconButton(
+              icon: Icon(toggleExpand ? Icons.expand : Icons.expand_more, size: toggleExpand ? 24 : 30),
+              onPressed: () {
+                setState(() {
+                  toggleExpand = !toggleExpand;
+                });
+              },
+            ),
+          if (_edit)
+            IconButton(
+              icon: Icon(togglePosition ? Icons.place : Icons.place_outlined, size: 24),
+              onPressed: () {
+                setState(() {
+                  togglePosition = !togglePosition;
+                });
+              },
+            ),
           IconButton(
-            icon: const Icon(Icons.expand, size: 24),
-            onPressed: () async {
-              final result = await rootBundle.loadString('assets/sample_data.json');
-              final doc = Document.fromJson(jsonDecode(result));
-              Navigator.push(context, MaterialPageRoute(builder: (context) => DocumentWriter(doc: doc)));
+            icon: Icon(toggleEdit ? Icons.panorama_fish_eye : Icons.remove_red_eye_outlined, size: 24),
+            onPressed: () {
+              setState(() {
+                toggleEdit = !toggleEdit;
+              });
             },
-          ),
+          )
         ],
       ),
+      floatingActionButton: toggleEdit
+          ? FloatingActionButton.extended(
+              label: Text(_edit == true ? 'Done' : 'Edit'),
+              onPressed: () {
+                setState(() {
+                  _edit = !_edit;
+                });
+              },
+              icon: Icon(_edit == true ? Icons.check : Icons.edit),
+            )
+          : null,
       drawer: Container(
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
         color: Colors.grey.shade800,
@@ -99,7 +133,8 @@ class _HomePageState extends State<HomePage> {
         scrollable: true,
         focusNode: _focusNode,
         autoFocus: false,
-        readOnly: false,
+        readOnly: !_edit,
+        showCursor: _edit,
         placeholder: 'Add content',
         expands: false,
         padding: EdgeInsets.zero,
@@ -147,15 +182,15 @@ class _HomePageState extends State<HomePage> {
       // provide a callback to enable picking images from device.
       // if omit, "image" button only allows adding images from url.
       // same goes for videos.
-      onImagePickCallback: _onImagePickCallback,
-      onVideoPickCallback: _onVideoPickCallback,
+      //onImagePickCallback: _onImagePickCallback,
+      //onVideoPickCallback: _onVideoPickCallback,
       // uncomment to provide a custom "pick from" dialog.
-      // mediaPickSettingSelector: _selectMediaPickSetting,
+      //mediaPickSettingSelector: _selectMediaPickSetting,
       toolbarIconSize: 22,
       showAlignmentButtons: true,
       showSmallButton: false,
       showDirection: true,
-      multiRowsDisplay: false,
+      multiRowsDisplay: toggleExpand,
     );
     if (kIsWeb) {
       toolbar = QuillToolbar.basic(
@@ -178,6 +213,8 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
+          if (togglePosition && _edit) Container(height: toggleExpand ? null : 55, child: toolbar),
+          if (togglePosition && _edit) Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
           Expanded(
             flex: 15,
             child: Container(
@@ -193,7 +230,12 @@ class _HomePageState extends State<HomePage> {
                     child: toolbar,
                   ),
                 )
-              : Container(height: 55, child: toolbar)
+              : Column(
+                  children: [
+                    if (!togglePosition && _edit) Container(height: toggleExpand ? null : 55, child: toolbar),
+                    if (!togglePosition && _edit) Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+                  ],
+                )
         ],
       ),
     );
@@ -283,7 +325,7 @@ class _HomePageState extends State<HomePage> {
           endIndent: size.width * 0.1,
         ),
         ListTile(
-          title: const Center(child: Text('Read only demo', style: itemStyle)),
+          title: const Center(child: Text('View read only', style: itemStyle)),
           dense: true,
           visualDensity: VisualDensity.compact,
           onTap: _readOnly,
@@ -302,7 +344,7 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       super.context,
       MaterialPageRoute(
-        builder: (context) => ReadOnlyPage(),
+        builder: (context) => DocumentReader(doc: _controller!.document),
       ),
     );
   }

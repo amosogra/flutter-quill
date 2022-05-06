@@ -1,14 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:app/pages/document_writer.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Text;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tuple/tuple.dart';
@@ -16,27 +14,28 @@ import 'package:tuple/tuple.dart';
 import '../universal_ui/universal_ui.dart';
 import 'read_only_page.dart';
 
-class HomePage extends StatefulWidget {
+class DocumentReader extends StatefulWidget {
+  const DocumentReader({required this.doc, Key? key}) : super(key: key);
+  final Document doc;
+
   @override
-  _HomePageState createState() => _HomePageState();
+  _DocumentReaderState createState() => _DocumentReaderState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _DocumentReaderState extends State<DocumentReader> {
   QuillController? _controller;
   final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    _loadFromAssets();
+    _loadDocument();
   }
 
-  Future<void> _loadFromAssets() async {
+  Future<void> _loadDocument() async {
     try {
-      final result = await rootBundle.loadString('assets/sample_data.json');
-      final doc = Document.fromJson(jsonDecode(result));
       setState(() {
-        _controller = QuillController(document: doc, selection: const TextSelection.collapsed(offset: 0));
+        _controller = QuillController(document: widget.doc, selection: const TextSelection.collapsed(offset: 0));
       });
     } catch (error) {
       final doc = Document()..insert(0, 'Empty asset');
@@ -57,18 +56,15 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.grey.shade800,
         elevation: 0,
         centerTitle: false,
-        title: const Text(
+        title: Text(
           'Flutter Quill',
+          style: GoogleFonts.fondamento(color: Colors.white),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.expand, size: 24),
-            onPressed: () async {
-              final result = await rootBundle.loadString('assets/sample_data.json');
-              final doc = Document.fromJson(jsonDecode(result));
-              Navigator.push(context, MaterialPageRoute(builder: (context) => DocumentWriter(doc: doc)));
-            },
-          ),
+            icon: const Icon(Icons.remove_red_eye_outlined, size: 24),
+            onPressed: () {},
+          )
         ],
       ),
       drawer: Container(
@@ -99,7 +95,8 @@ class _HomePageState extends State<HomePage> {
         scrollable: true,
         focusNode: _focusNode,
         autoFocus: false,
-        readOnly: false,
+        readOnly: true,
+        showCursor: false,
         placeholder: 'Add content',
         expands: false,
         padding: EdgeInsets.zero,
@@ -193,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                     child: toolbar,
                   ),
                 )
-              : Container(height: 55, child: toolbar)
+              : Container(),
         ],
       ),
     );
@@ -273,7 +270,8 @@ class _HomePageState extends State<HomePage> {
       fontSize: 18,
       fontWeight: FontWeight.bold,
     );
-    return Column(
+    return Container();
+    Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Divider(

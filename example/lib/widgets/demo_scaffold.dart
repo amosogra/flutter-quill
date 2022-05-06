@@ -86,7 +86,7 @@ class _DemoScaffoldState extends State<DemoScaffold> {
   @override
   Widget build(BuildContext context) {
     final actions = widget.actions ?? <Widget>[];
-    var toolbar = QuillToolbar.basic(controller: _controller!);
+    var toolbar = QuillToolbar.basic(controller: _controller!, showSmallButton: true, showAlignmentButtons: true, showDirection: true, multiRowsDisplay: false);
     if (_isDesktop()) {
       toolbar = QuillToolbar.basic(
           controller: _controller!,
