@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:app/pages/document_reader.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -13,7 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:tuple/tuple.dart';
 
 import '../universal_ui/universal_ui.dart';
-import 'read_only_page.dart';
+import 'document_reader.dart';
 
 class DocumentWriter extends StatefulWidget {
   const DocumentWriter({required this.doc, Key? key}) : super(key: key);
